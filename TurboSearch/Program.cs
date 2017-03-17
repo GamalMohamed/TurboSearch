@@ -19,7 +19,7 @@ namespace TurboSearch
         {
             _filter = new BloomFilter<string>(200000);
 
-            Settings.SeedsAddress.Add("https://en.wikipedia.org/wiki/Car"); // https://en.wikipedia.org/wiki/Portal:Contents
+            Settings.SeedsAddress.Add("https://blog.codinghorror.com/"); // https://en.wikipedia.org/wiki/Portal:Contents
 
             Settings.ThreadCount = 2;
             Settings.Depth = 3;
@@ -34,18 +34,9 @@ namespace TurboSearch
 
         private static bool MasterAddUrlEvent(AddUrlEventArgs args)
         {
-            if (_filter.Contains(args.Url))
+            if (_filter.Contains(args.Url)|| !CheckRobotTxtFile(args.Url))
                 return false;
-
-            string contentsOfRobotsTxtFile = new WebClient().DownloadString(ConvertToBaseUrl(args.Url)+"/robots.txt");
-            Robots robots = Robots.Load(contentsOfRobotsTxtFile);
-
-            if (!robots.IsPathAllowed(Settings.UserAgent, args.Url))
-            {
-                Console.WriteLine("Blocked URL");
-                return false;
-            }
-              
+            
             _filter.Add(args.Url);
 
             Console.WriteLine(args.Url);
@@ -60,13 +51,22 @@ namespace TurboSearch
         }
 
 
-        public static string ConvertToBaseUrl(string url)
+        private static bool CheckRobotTxtFile(string url)
         {
-            var x=url.Split('/');
-            return (x[0] + "//" + x[2]);
+            var urlPartitions = url.Split('/');
+            string domain = (urlPartitions[0] + "//" + urlPartitions[2]);
+
+            string contentsOfRobotsTxtFile = new WebClient().DownloadString(domain + "/robots.txt");
+            Robots robots = Robots.Load(contentsOfRobotsTxtFile);
+
+            if (!robots.IsPathAllowed(Settings.UserAgent, url))
+            {
+                Console.WriteLine("Blocked URL");
+                return false;
+            }
+            return true;
         }
-
-
+        
     }
 }
 

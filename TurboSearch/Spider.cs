@@ -164,6 +164,7 @@ namespace TurboSearch
 
                         using (stream)
                         {
+                                
                             string html = this.ParseContent(stream, response.CharacterSet);
 
                             this.ParseLinks(urlInfo, html);
@@ -178,7 +179,6 @@ namespace TurboSearch
                                         Html = html
                                     });
                             }
-
                             stream?.Close();
                         }
                     }

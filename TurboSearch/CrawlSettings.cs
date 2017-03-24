@@ -11,7 +11,7 @@ namespace TurboSearch
     {
         private byte _depth = 3;
 
-        private bool _lockHost = true;
+        private bool _lockHost;
 
         private byte _threadCount = 1;
 
@@ -23,13 +23,12 @@ namespace TurboSearch
 
         public CrawlSettings()
         {
-            this.AutoSpeedLimit = false;
-            this.EscapeLinks = new List<string>();
-            this.KeepCookie = false;
-            this.HrefKeywords = new List<string>();
-            this.LockHost = true;
-            this.RegularFilterExpressions = new List<string>();
-            this.SeedsAddress = new List<string>();
+            AutoSpeedLimit = false;
+            EscapeLinks = new List<string>();
+            HrefKeywords = new List<string>();
+            LockHost = false;
+            RegularFilterExpressions = new List<string>();
+            SeedsAddress = new List<string>();
         }
 
         public bool AutoSpeedLimit { get; set; }
@@ -38,18 +37,16 @@ namespace TurboSearch
         {
             get
             {
-                return this._depth;
+                return _depth;
             }
 
             set
             {
-                this._depth = value;
+                _depth = value;
             }
         }
 
         public List<string> EscapeLinks { get; private set; }
-
-        public bool KeepCookie { get; set; }
 
         public List<string> HrefKeywords { get; private set; }
 
@@ -57,12 +54,12 @@ namespace TurboSearch
         {
             get
             {
-                return this._lockHost;
+                return _lockHost;
             }
 
             set
             {
-                this._lockHost = value;
+                _lockHost = value;
             }
         }
 
@@ -74,12 +71,12 @@ namespace TurboSearch
         {
             get
             {
-                return this._threadCount;
+                return _threadCount;
             }
 
             set
             {
-                this._threadCount = value;
+                _threadCount = value;
             }
         }
 
@@ -87,12 +84,12 @@ namespace TurboSearch
         {
             get
             {
-                return this._timeout;
+                return _timeout;
             }
 
             set
             {
-                this._timeout = value;
+                _timeout = value;
             }
         }
 
@@ -100,12 +97,12 @@ namespace TurboSearch
         {
             get
             {
-                return this._userAgent;
+                return _userAgent;
             }
 
             set
             {
-                this._userAgent = value;
+                _userAgent = value;
             }
         }
     }

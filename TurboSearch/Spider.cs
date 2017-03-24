@@ -36,44 +36,43 @@ namespace TurboSearch
     {
         private const string WebUrlRegularExpressions = @"^(http|https)://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?";
 
-        private readonly CookieContainer _cookieContainer;
-
         private readonly Random _random;
-
         private readonly bool[] _threadStatus;
-
         private readonly Thread[] _threads;
 
         public event AddUrlEventHandler AddUrlEvent;
         public event CrawlErrorEventHandler CrawlErrorEvent;
         public event DataReceivedEventHandler DataReceivedEvent;
 
-        public CrawlSettings Settings { get; private set; }
+        public string Logfilepath { get; set; }
+        public StreamWriter LogFile { get; set; }
+        public int CrawledLinksNumber { get; set; }
+        
+        public CrawlSettings Settings { get; }
 
         public Spider(CrawlSettings settings)
         {
-            this._cookieContainer = new CookieContainer();
-            this._random = new Random();
+            _random = new Random();
 
-            this.Settings = settings;
-            this._threads = new Thread[settings.ThreadCount];
-            this._threadStatus = new bool[settings.ThreadCount];
+            Settings = settings;
+            _threads = new Thread[settings.ThreadCount];
+            _threadStatus = new bool[settings.ThreadCount];
         }
 
         public void Crawl()
         {
-            this.Initialize();
+            Initialize();
 
-            for (int i = 0; i < this._threads.Length; i++)
+            for (int i = 0; i < _threads.Length; i++)
             {
-                this._threads[i].Start(i);
-                this._threadStatus[i] = false;
+                _threads[i].Start(i);
+                _threadStatus[i] = false;
             }
         }
 
         public void Stop()
         {
-            foreach (Thread thread in this._threads)
+            foreach (Thread thread in _threads)
             {
                 thread.Abort();
             }
@@ -81,15 +80,14 @@ namespace TurboSearch
 
         private void ConfigRequest(HttpWebRequest request)
         {
-            request.UserAgent = this.Settings.UserAgent;
-            request.CookieContainer = this._cookieContainer;
+            request.UserAgent = Settings.UserAgent;
             request.AllowAutoRedirect = true;
             request.MediaType = "text/html";
             request.Headers["Accept-Language"] = "zh-CN,zh;q=0.8";
 
-            if (this.Settings.Timeout > 0)
+            if (Settings.Timeout > 0)
             {
-                request.Timeout = this.Settings.Timeout;
+                request.Timeout = Settings.Timeout;
             }
         }
 
@@ -100,8 +98,8 @@ namespace TurboSearch
             {
                 if (UrlQueue.Instance.Count == 0)
                 {
-                    this._threadStatus[currentThreadIndex] = true;
-                    if (!this._threadStatus.Any(t => t == false))
+                    _threadStatus[currentThreadIndex] = true;
+                    if (!_threadStatus.Any(t => t == false))
                     {
                         break;
                     }
@@ -110,7 +108,7 @@ namespace TurboSearch
                     continue;
                 }
 
-                this._threadStatus[currentThreadIndex] = false;
+                _threadStatus[currentThreadIndex] = false;
 
                 if (UrlQueue.Instance.Count == 0)
                 {
@@ -129,14 +127,14 @@ namespace TurboSearch
                         continue;
                     }
 
-                    if (this.Settings.AutoSpeedLimit)
+                    if (Settings.AutoSpeedLimit)
                     {
-                        int span = this._random.Next(1000, 5000);
+                        int span = _random.Next(1000, 5000);
                         Thread.Sleep(span);
                     }
 
                     request = WebRequest.Create(urlInfo.UrlString) as HttpWebRequest;
-                    this.ConfigRequest(request);
+                    ConfigRequest(request);
 
                     if (request != null)
                     {
@@ -145,8 +143,6 @@ namespace TurboSearch
 
                     if (response != null)
                     {
-                        this.PersistenceCookie(response);
-
                         Stream stream = null;
 
                         if (response.ContentEncoding == "gzip")
@@ -165,13 +161,13 @@ namespace TurboSearch
                         using (stream)
                         {
                                 
-                            string html = this.ParseContent(stream, response.CharacterSet);
+                            string html = ParseContent(stream, response.CharacterSet);
 
-                            this.ParseLinks(urlInfo, html);
+                            ParseLinks(urlInfo, html);
 
-                            if (this.DataReceivedEvent != null)
+                            if (DataReceivedEvent != null)
                             {
-                                this.DataReceivedEvent(
+                                DataReceivedEvent(
                                     new DataReceivedEventArgs
                                     {
                                         Url = urlInfo.UrlString,
@@ -185,11 +181,11 @@ namespace TurboSearch
                 }
                 catch (Exception exception)
                 {
-                    if (this.CrawlErrorEvent != null)
+                    if (CrawlErrorEvent != null)
                     {
                         if (urlInfo != null)
                         {
-                            this.CrawlErrorEvent(
+                            CrawlErrorEvent(
                                 new CrawlErrorEventArgs { Url = urlInfo.UrlString, Exception = exception });
                         }
                     }
@@ -205,9 +201,9 @@ namespace TurboSearch
 
         private void Initialize()
         {
-            if (this.Settings.SeedsAddress != null && this.Settings.SeedsAddress.Count > 0)
+            if (Settings.SeedsAddress != null && Settings.SeedsAddress.Count > 0)
             {
-                foreach (string seed in this.Settings.SeedsAddress)
+                foreach (string seed in Settings.SeedsAddress)
                 {
                     if (Regex.IsMatch(seed, WebUrlRegularExpressions, RegexOptions.IgnoreCase))
                     {
@@ -216,11 +212,11 @@ namespace TurboSearch
                 }
             }
 
-            for (int i = 0; i < this.Settings.ThreadCount; i++)
+            for (int i = 0; i < Settings.ThreadCount; i++)
             {
-                var threadStart = new ParameterizedThreadStart(this.CrawlProcess);
+                var threadStart = new ParameterizedThreadStart(CrawlProcess);
 
-                this._threads[i] = new Thread(threadStart);
+                _threads[i] = new Thread(threadStart);
             }
 
             ServicePointManager.DefaultConnectionLimit = 256;
@@ -230,10 +226,10 @@ namespace TurboSearch
         {
             bool result = false;
 
-            if (this.Settings.RegularFilterExpressions != null && this.Settings.RegularFilterExpressions.Count > 0)
+            if (Settings.RegularFilterExpressions != null && Settings.RegularFilterExpressions.Count > 0)
             {
                 if (
-                    this.Settings.RegularFilterExpressions.Any(
+                    Settings.RegularFilterExpressions.Any(
                         pattern => Regex.IsMatch(url, pattern, RegexOptions.IgnoreCase)))
                 {
                     result = true;
@@ -298,7 +294,7 @@ namespace TurboSearch
 
         private void ParseLinks(UrlInfo urlInfo, string html)
         {
-            if (this.Settings.Depth > 0 && urlInfo.Depth >= this.Settings.Depth)
+            if (Settings.Depth > 0 && urlInfo.Depth >= Settings.Depth)
             {
                 return;
             }
@@ -325,17 +321,17 @@ namespace TurboSearch
                 {
                     bool canBeAdd = true;
 
-                    if (this.Settings.EscapeLinks != null && this.Settings.EscapeLinks.Count > 0)
+                    if (Settings.EscapeLinks != null && Settings.EscapeLinks.Count > 0)
                     {
-                        if (this.Settings.EscapeLinks.Any(suffix => href.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
+                        if (Settings.EscapeLinks.Any(suffix => href.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)))
                         {
                             canBeAdd = false;
                         }
                     }
 
-                    if (this.Settings.HrefKeywords != null && this.Settings.HrefKeywords.Count > 0)
+                    if (Settings.HrefKeywords != null && Settings.HrefKeywords.Count > 0)
                     {
-                        if (!this.Settings.HrefKeywords.Any(href.Contains))
+                        if (!Settings.HrefKeywords.Any(href.Contains))
                         {
                             canBeAdd = false;
                         }
@@ -362,7 +358,7 @@ namespace TurboSearch
 
                         url = currentUri.AbsoluteUri;
 
-                        if (this.Settings.LockHost)
+                        if (Settings.LockHost)
                         {
                             if (baseUri.Host.Split('.').Skip(1).Aggregate((a, b) => a + "." + b)
                                 != currentUri.Host.Split('.').Skip(1).Aggregate((a, b) => a + "." + b))
@@ -371,13 +367,13 @@ namespace TurboSearch
                             }
                         }
 
-                        if (!this.IsMatchRegular(url))
+                        if (!IsMatchRegular(url))
                         {
                             continue;
                         }
 
                         var addUrlEventArgs = new AddUrlEventArgs { Title = text, Depth = urlInfo.Depth + 1, Url = url };
-                        if (this.AddUrlEvent != null && !this.AddUrlEvent(addUrlEventArgs))
+                        if (AddUrlEvent != null && !AddUrlEvent(addUrlEventArgs))
                         {
                             continue;
                         }
@@ -386,28 +382,6 @@ namespace TurboSearch
                     }
                 }
             }
-        }
-
-        private void PersistenceCookie(HttpWebResponse response)
-        {
-            if (!this.Settings.KeepCookie)
-            {
-                return;
-            }
-
-            string cookies = response.Headers["Set-Cookie"];
-            if (!string.IsNullOrEmpty(cookies))
-            {
-                var cookieUri =
-                    new Uri(
-                        string.Format(
-                            "{0}://{1}:{2}/",
-                            response.ResponseUri.Scheme,
-                            response.ResponseUri.Host,
-                            response.ResponseUri.Port));
-
-                this._cookieContainer.SetCookies(cookieUri, cookies);
-            }
-        }
+        }    
     }
 }

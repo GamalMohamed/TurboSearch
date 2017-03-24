@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurboSearch", "TurboSearch\TurboSearch.csproj", "{1E9B1A28-9C21-47C3-8C80-DC4B83734685}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crawler", "TurboSearch\Crawler.csproj", "{1E9B1A28-9C21-47C3-8C80-DC4B83734685}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -11,7 +11,7 @@ namespace TurboSearch
         {
             this._url = urlString;
         }
-        //string
+
         public int Depth { get; set; }
 
         public string UrlString

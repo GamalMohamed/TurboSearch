@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -44,6 +45,11 @@ namespace TurboSearch
             return false;
         }
 
+    }
+
+    public class WordContext : DbContext
+    {
+        public DbSet<Word> Words { get; set; }
     }
 
 }

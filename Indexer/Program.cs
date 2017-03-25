@@ -14,39 +14,55 @@ namespace TurboSearch
         private static readonly Porter2 Stemer = new Porter2();
         private static readonly char[] Delimiters = { };
 
-        private const int MaxnumberOfwords = 10000000;
+        private const int MaxnumberOfwords = 1000000;
         private const string HtmlDocsPath =
             @"D:\3rd year-2nd term material\1- APT\3- Project\Project 2017\TurboSearch\Indexer\docs\";
 
         private static readonly List<string> StoppingList = ReadStoppingList();
-        public static Word[] WordsDictionary = new Word[MaxnumberOfwords];
+
+        public static WordContext Db = new WordContext();
 
         private static void Main(string[] args)
         {
-            int idWords = 0;
-            string[] tags = { "title", "h1", "h2", "h3", "p" };
-            for (int i = 1; i < 30; i++)
+            if (!Db.Words.Any())
             {
-                var newPath = HtmlDocsPath + i + ".html";
-                Console.WriteLine("Parsing File: " + newPath);
+                var wordsDictionary = new Word[MaxnumberOfwords];
+                var idWords = 0;
+                string[] tags = { "title", "h1", "h2", "h3", "p" };
+                for (int i = 1; i < 30; i++)
+                {
+                    var newPath = HtmlDocsPath + i + ".html";
+                    Console.WriteLine("Parsing File: " + newPath);
 
-                var doc = new HtmlDocument();
-                doc.Load(newPath);
+                    var doc = new HtmlDocument();
+                    doc.Load(newPath);
 
-                foreach (var t in tags)
-                    FillWordsDictionary(i, doc, t, ref idWords);
+                    foreach (var t in tags)
+                        FillWordsDictionary(i, doc, t, ref idWords, ref wordsDictionary);
+                }
+                for (int i = 0; i < 100; i++)
+                {
+                    if (wordsDictionary[i] != null)
+                    {
+                        Console.WriteLine(i + "Adding to db");
+                        Db.Words.Add(wordsDictionary[i]);
+                        Db.SaveChanges();
+                    }
+                }
+
+                //for (int i = 0; i < 30; i++)
+                //    Console.WriteLine(wordsDictionary[i].Id + " " + wordsDictionary[i].WordContent + " " + wordsDictionary[i].UrlIdTags);
             }
 
-            for (int i = 0; i < idWords; i++)
-                Console.WriteLine(WordsDictionary[i].Id + " " + WordsDictionary[i].WordContent + " " + WordsDictionary[i].UrlIdTags);
-
-            Query(idWords);
+            var totalRows = (from o in Db.Words
+                            select o).Count();
+            Query(totalRows);
         }
 
         private static void Query(int idWords)
         {
             Console.Write("\nEnter word: ");
-            string strin = Console.ReadLine();
+            var strin = Console.ReadLine();
             var parts = strin?.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
             var parts2 = parts?.Distinct().ToArray();
             for (int i = 0; i < parts2.Length; i++)
@@ -60,9 +76,11 @@ namespace TurboSearch
             {
                 for (int k = 0; k < idWords; k++)
                 {
-                    if (WordsDictionary[k].WordContent == parts2[i])
+                    var e = parts2[i];
+                    var d = Db.Words.FirstOrDefault(t => t.WordContent == e);
+                    if (d!=null)
                     {
-                        string[] newwords = WordsDictionary[k].UrlIdTags.Split(',');
+                        string[] newwords = d.UrlIdTags.Split(',');
                         foreach (string word in newwords)
                         {
                             string[] words2 = word.Split('$');
@@ -85,12 +103,12 @@ namespace TurboSearch
             }
             else
                 Console.Write("No docs!");
-            Console.WriteLine();
+            Console.WriteLine("\n");
         }
 
-        private static void FillWordsDictionary(int i, HtmlDocument doc, string htmltag, ref int idWords)
+        private static void FillWordsDictionary(int i, HtmlDocument doc, string htmltag, ref int idWords, ref Word[] wordsDictionary)
         {
-            string tagElement = "";
+            var tagElement = "";
             switch (htmltag)
             {
                 case "title":
@@ -118,40 +136,36 @@ namespace TurboSearch
             var parts2 = parts.Distinct().ToArray();
             foreach (var word in parts2)
             {
-                string sword = Stemer.stem(word.ToLower());
+                var sword = Stemer.stem(word.ToLower());
                 if (Regex.IsMatch(sword, @"^[a-z]+$") && CheckStoppingList(sword, StoppingList) && sword != " " && sword != "" && sword != "\n" && sword != "\t")
                 {
                     bool flag = false;
                     for (int j = 0; j < idWords; j++)
                     {
-                        if (WordsDictionary[j].WordContent == sword)
+                        if (wordsDictionary[j].WordContent == sword)
                         {
                             if (htmltag == "title")
                             {
-                                if (!WordsDictionary[j].CheckIDexists(i))
+                                if (!wordsDictionary[j].CheckIDexists(i))
                                 {
-                                    WordsDictionary[j].appendID_tag(i, "<" + htmltag + ">");
+                                    wordsDictionary[j].appendID_tag(i, "<" + htmltag + ">");
                                     flag = true;
                                 }
                             }
                             else
                             {
-                                if (WordsDictionary[j].CheckIDexists(i))
+                                if (wordsDictionary[j].CheckIDexists(i))
                                 {
                                     flag = true;
                                     break;
                                 }
-                                else
-                                {
-                                    WordsDictionary[j].appendID_tag(i, "<" + htmltag + ">");
-                                }
+                                wordsDictionary[j].appendID_tag(i, "<" + htmltag + ">");
                             }
-                        }
-
+                        }    
                     }
                     if (!flag)
                     {
-                        WordsDictionary[idWords] = new Word(idWords, sword, i, "<" + htmltag + ">");
+                        wordsDictionary[idWords] = new Word(idWords, sword, i, "<" + htmltag + ">");
                         idWords++;
                     }
                 }

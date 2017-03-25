@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 
-namespace Crawler
+namespace TurboSearch
 {
     public class BloomFilter<T>
     {

@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace Crawler
+namespace TurboSearch
 {
     public delegate void DataReceivedEventHandler(DataReceivedEventArgs args);
     public delegate void CrawlErrorEventHandler(CrawlErrorEventArgs args);
@@ -46,7 +46,7 @@ namespace Crawler
 
         public string Logfilepath { get; set; }
         public StreamWriter LogFile { get; set; }
-        public int CrawledLinksNumber { get; set; }
+        public int CrawledLinkNumber { get; set; }
         
         public CrawlSettings Settings { get; }
 

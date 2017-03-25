@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using RobotsTxt;
 
 
-namespace Crawler
+namespace TurboSearch
 {
     class Program
     {
@@ -21,7 +21,7 @@ namespace Crawler
         private static void Main(string[] args)
         {
             _filter = new BloomFilter<string>(200000);
-
+            
             Settings.ThreadCount = 10;
             Settings.Depth = 4;
             Settings.EscapeLinks.Add(".jpg");
@@ -29,7 +29,7 @@ namespace Crawler
             MySpider = new Spider(Settings)
             {
                 Logfilepath =
-                    @"D:\3rd year-2nd term material\1- APT\3- Project\Project 2017\TurboSearch\Crawler\bin\log.txt"
+                    @"D:\3rd year-2nd term material\1- APT\3- Project\Project 2017\TurboSearch\log.txt"
             };
 
             SetLogSettings();
@@ -51,15 +51,15 @@ namespace Crawler
             }
             else
             {
-                Console.WriteLine("Continuing crawling..reading from Cache:\n");
+                Console.WriteLine("Continuing crawling..reading from log file:\n");
                 var lines = File.ReadAllLines(MySpider.Logfilepath);
                 for (int i = 1; i < Settings.ThreadCount && i < lines.Length; i++)
                 {
                     Settings.SeedsAddress.Add(lines[lines.Length - i]);
                 }
-                MySpider.CrawledLinksNumber = Math.Min(lines.Length, Math.Abs(lines.Length - Settings.ThreadCount));
+                MySpider.CrawledLinkNumber = Math.Min(lines.Length, Math.Abs(lines.Length - Settings.ThreadCount));
                 MySpider.LogFile = new StreamWriter(MySpider.Logfilepath);
-                foreach (string l in lines)
+                foreach (var l in lines)
                 {
                     MySpider.LogFile.WriteLine(l);
                     MySpider.LogFile.Flush();
@@ -67,13 +67,12 @@ namespace Crawler
                 MySpider.LogFile.WriteLine();
             }    
         }
-
-
+        
         private static bool MasterAddUrlEvent(AddUrlEventArgs args)
         {
             lock (_filter)
             {
-                if (MySpider.CrawledLinksNumber >= 5000)
+                if (MySpider.CrawledLinkNumber >= 5000)
                 {
                     Console.WriteLine("\nReached max no. of pages to crawl!Exiting..\n");
                     Environment.Exit(1);
@@ -83,9 +82,9 @@ namespace Crawler
                 {
                     _filter.Add(args.Url);
 
-                    Console.WriteLine(MySpider.CrawledLinksNumber++ + ". " + args.Url);
-                    WebClient client = new WebClient();
-                    client.DownloadFile(args.Url, @"D:\temp\" + MySpider.CrawledLinksNumber + ".html");
+                    Console.WriteLine(MySpider.CrawledLinkNumber++ + ". " + args.Url);
+                    var client = new WebClient();
+                    client.DownloadFile(args.Url, @"D:\temp\" + MySpider.CrawledLinkNumber + ".html");
 
                     MySpider.LogFile.WriteLine(args.Url);
                     MySpider.LogFile.Flush();

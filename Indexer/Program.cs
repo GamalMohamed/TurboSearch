@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 
-namespace Indexer
+namespace TurboSearch
 {
     class Program
     {

@@ -53,14 +53,14 @@ namespace TurboSearch
                 //for (int i = 0; i < 30; i++)
                 //    Console.WriteLine(wordsDictionary[i].Id + " " + wordsDictionary[i].WordContent + " " + wordsDictionary[i].UrlIdTags);
             }
-
-            var totalRows = (from o in Db.Words
-                            select o).Count();
-            Query(totalRows);
+            
+            Query();
         }
 
-        private static void Query(int idWords)
+        private static void Query()
         {
+            var idWords = (from o in Db.Words
+                             select o).Count();
             Console.Write("\nEnter word: ");
             var strin = Console.ReadLine();
             var parts = strin?.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);

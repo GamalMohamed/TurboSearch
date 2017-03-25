@@ -46,6 +46,7 @@ namespace TurboSearch
 
         public string Logfilepath { get; set; }
         public StreamWriter LogFile { get; set; }
+        public string DownloadedHtmlFilesLoc { get; set; }
         public int CrawledLinkNumber { get; set; }
         
         public CrawlSettings Settings { get; }

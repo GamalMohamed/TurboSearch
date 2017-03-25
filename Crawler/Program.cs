@@ -12,10 +12,8 @@ namespace TurboSearch
 {
     class Program
     {
-        private static BloomFilter<string> _filter;
-
         private static readonly CrawlSettings Settings = new CrawlSettings();
-
+        private static BloomFilter<string> _filter;
         public static Spider MySpider;
 
         private static void Main(string[] args)
@@ -29,7 +27,8 @@ namespace TurboSearch
             MySpider = new Spider(Settings)
             {
                 Logfilepath =
-                    @"D:\3rd year-2nd term material\1- APT\3- Project\Project 2017\TurboSearch\log.txt"
+                    @"D:\3rd year-2nd term material\1- APT\3- Project\Project 2017\TurboSearch\log.txt",
+                DownloadedHtmlFilesLoc = @"D:\temp\"
             };
 
             SetLogSettings();
@@ -84,7 +83,7 @@ namespace TurboSearch
 
                     Console.WriteLine(MySpider.CrawledLinkNumber++ + ". " + args.Url);
                     var client = new WebClient();
-                    client.DownloadFile(args.Url, @"D:\temp\" + MySpider.CrawledLinkNumber + ".html");
+                    client.DownloadFile(args.Url, MySpider.DownloadedHtmlFilesLoc + MySpider.CrawledLinkNumber + ".html");
 
                     MySpider.LogFile.WriteLine(args.Url);
                     MySpider.LogFile.Flush();

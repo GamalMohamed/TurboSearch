@@ -7,54 +7,184 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 
-namespace TurboSearch
+namespace Indexer
 {
     class Program
     {
-        private static readonly Porter2 Stemer = new Porter2();
         private static readonly char[] Delimiters = { };
-
-        private const int MaxnumberOfwords = 1000000;
-        private const string HtmlDocsPath =
-            @"D:\3rd year-2nd term material\1- APT\3- Project\Project 2017\TurboSearch\Indexer\docs\";
-
-        private static readonly List<string> StoppingList = ReadStoppingList();
+        private static readonly Porter2 Stemer = new Porter2();
+        private const string Path = @"D:\Misc\temp0\";
 
         public static WordContext Db = new WordContext();
 
+        private static List<string> ReadStoppingList()
+        {
+            List<string> stoppingList = new List<string>();
+
+            using (StreamReader sr = new StreamReader(Path+"stopping-list.txt"))
+            {
+
+                string line;
+
+                while ((line = sr.ReadLine()) != null)
+                {
+                    stoppingList.Add(line);
+                }
+                return stoppingList;
+            }
+        }
+
+        private static string appendID_tag(int id, string tag, string str)
+        {
+            str = str + id.ToString() + '$' + '<' + tag + '>';
+            return str;
+        }
+
+        private static string AppendIDtagWithOccurencies(int occurencies, string str)
+        {
+
+            str = str + '$' + occurencies + ',';
+            return str;
+        }
+
+        private static bool CheckSl(string str, List<string> stoppingList)
+        {
+            for (int i = 0; i < stoppingList.Count; i++)
+            {
+                if (str == stoppingList[i])
+                    return false;
+            }
+            return true;
+        }
+
+        private static bool CheckIDexists(int idurl, string str)
+        {
+            if (str.Length != 0)
+            {
+                string temp = str;
+                temp = temp.Remove(temp.Length - 1);
+                int index = temp.LastIndexOf(',');
+                string newTemp = temp.Substring(index + 1);
+                string[] words = newTemp.Split('$');
+                if (words[0] == idurl.ToString())
+                    return true;
+            }
+            return false;
+        }
+
         private static void Main(string[] args)
         {
-            if (!Db.Words.Any())
+
+            int countArr = 0;
+            Dictionary<string, string> wordMap = new Dictionary<string, string>();
+            const long number = 1000000;
+            string[] wordMapArr = new string[number];
+            var words = new Word[number];
+            for (int i = 0; i < number; i++)
             {
-                var wordsDictionary = new Word[MaxnumberOfwords];
-                var idWords = 0;
-                string[] tags = { "title", "h1", "h2", "h3", "p" };
-                for (int i = 1; i < 30; i++)
-                {
-                    var newPath = HtmlDocsPath + i + ".html";
-                    Console.WriteLine("Parsing File: " + newPath);
+                words[i] = new Word();
+            }
+            string[] tags = { "title", "h1", "h2", "h3", "p" };
+            int numOfDocs = 50;
+            
+            List<string> stoppingList = ReadStoppingList();
+            for (int i = 1; i < numOfDocs; i++)
+            {
+                var newPath = Path + i+".html";
+                Console.WriteLine("Parsing File: " + newPath);
+                if(!File.Exists(newPath))
+                    continue;
 
-                    var doc = new HtmlDocument();
-                    doc.Load(newPath);
-
-                    foreach (var t in tags)
-                        FillWordsDictionary(i, doc, t, ref idWords, ref wordsDictionary);
-                }
-                for (int i = 0; i < 100; i++)
+                var wordOccurs = new Dictionary<string, int>();
+                string[] totalWordsofDoc = { "" };
+                var doc = new HtmlDocument();
+                doc.Load(newPath);
+                foreach (string t in tags)
                 {
-                    if (wordsDictionary[i] != null)
+                    var totalWordsofTag = "";
+                    if (t == "title")
                     {
-                        Console.WriteLine(i + "Adding to db");
-                        Db.Words.Add(wordsDictionary[i]);
-                        Db.SaveChanges();
+                        totalWordsofTag = (from x in doc.DocumentNode.Descendants()
+                            where x.Name.ToLower() == "title"
+                            select x.InnerText).FirstOrDefault();
+
+                    }
+                    else if (t == "p")
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        IEnumerable<HtmlNode> nodes = doc.DocumentNode.Descendants().Where(n =>
+                            n.NodeType == HtmlNodeType.Text &&
+                            n.ParentNode.Name != "script" &&
+                            n.ParentNode.Name != "style");
+                        totalWordsofTag = "";
+                        foreach (HtmlNode node in nodes)
+                            totalWordsofTag += node.InnerText;
+                    }
+                    else
+                    {
+                        var h1Elements = doc.DocumentNode.Descendants(t).Select(nd => nd.InnerText);
+                        totalWordsofTag = "";
+                        foreach (string node in h1Elements)
+                            totalWordsofTag += node;
+                    }
+
+                    var parts = totalWordsofTag.Split(Delimiters,
+                        StringSplitOptions.RemoveEmptyEntries);
+                    string stemmedTotalWordsofTag = "";
+                    foreach (string word in parts)
+                    {
+
+                        string sword = Stemer.stem(word.ToLower());
+                        if (Regex.IsMatch(sword, @"^[a-z]+$") && CheckSl(sword, stoppingList) && sword != " " && sword != "" && sword != "\n" && sword != "\t")
+                        {
+                            stemmedTotalWordsofTag = stemmedTotalWordsofTag + sword + ' ';
+                        }
+                    }
+                    var stemmedTotalWordsofTagArr = stemmedTotalWordsofTag.Split(' ');
+                    var z = new string[totalWordsofDoc.Length + stemmedTotalWordsofTagArr.Length];
+                    totalWordsofDoc.CopyTo(z, 0);
+                    stemmedTotalWordsofTagArr.CopyTo(z, totalWordsofDoc.Length);
+                    totalWordsofDoc = z;
+                    foreach (string word in stemmedTotalWordsofTagArr)
+                    {
+                        if (!wordMap.ContainsKey(word))
+                        {
+                            wordMap[word] = appendID_tag(i, t, "");
+                            wordOccurs[word] = 1;
+                            wordMapArr[countArr++] = word;
+                        }
+                        else if (!CheckIDexists(i, wordMap[word]))
+                        {
+                            wordMap[word] = appendID_tag(i, t, wordMap[word]);
+                            wordOccurs[word] = 1;
+                        }
+                        else
+                            wordOccurs[word]++;
+
                     }
                 }
-
-                //for (int i = 0; i < 30; i++)
-                //    Console.WriteLine(wordsDictionary[i].Id + " " + wordsDictionary[i].WordContent + " " + wordsDictionary[i].UrlIdTags);
+                var parts2 = totalWordsofDoc.Distinct().ToArray();
+                foreach (string t in parts2)
+                    wordMap[t] = AppendIDtagWithOccurencies(wordOccurs[t], wordMap[t]);
             }
-            
+            Console.WriteLine("Writing " + countArr + " words to objects");
+
+            for (int k = 0; k < countArr; k++)
+            {
+                words[k].SetAttributes(k, wordMapArr[k], wordMap[wordMapArr[k]]);
+                Db.Words.Add(words[k]);
+                Db.SaveChanges();
+                Console.WriteLine(k);
+            }
+            Console.ReadKey();
+            for (int k = countArr - 10; k < countArr - 3; k++)
+            {
+                
+                words[k].PrintAttributes();
+            }
+
             Query();
+
         }
 
         private static void Query()
@@ -80,7 +210,7 @@ namespace TurboSearch
                     var d = Db.Words.FirstOrDefault(t => t.WordContent == e);
                     if (d!=null)
                     {
-                        string[] newwords = d.UrlIdTags.Split(',');
+                        string[] newwords = d.WordStorings.Split(',');
                         foreach (string word in newwords)
                         {
                             string[] words2 = word.Split('$');
@@ -106,93 +236,6 @@ namespace TurboSearch
             Console.WriteLine("\n");
         }
 
-        private static void FillWordsDictionary(int i, HtmlDocument doc, string htmltag, ref int idWords, ref Word[] wordsDictionary)
-        {
-            var tagElement = "";
-            switch (htmltag)
-            {
-                case "title":
-                    tagElement = doc.DocumentNode.Descendants(htmltag).Select(nd => nd.InnerText).FirstOrDefault();
-                    break;
-                case "h1":
-                case "h2":
-                case "h3":
-                    var otherTagElements = doc.DocumentNode.Descendants(htmltag).Select(nd => nd.InnerText);
-                    foreach (string node in otherTagElements)
-                        tagElement += node;
-                    break;
-                case "p":
-                    var sb = new StringBuilder();
-                    var nodes = doc.DocumentNode.Descendants().Where(n =>
-                        n.NodeType == HtmlNodeType.Text &&
-                        n.ParentNode.Name != "script" &&
-                        n.ParentNode.Name != "style");
-                    foreach (var node in nodes)
-                        tagElement += node.InnerText;
-                    break;
-            }
-
-            var parts = tagElement.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
-            var parts2 = parts.Distinct().ToArray();
-            foreach (var word in parts2)
-            {
-                var sword = Stemer.stem(word.ToLower());
-                if (Regex.IsMatch(sword, @"^[a-z]+$") && CheckStoppingList(sword, StoppingList) && sword != " " && sword != "" && sword != "\n" && sword != "\t")
-                {
-                    bool flag = false;
-                    for (int j = 0; j < idWords; j++)
-                    {
-                        if (wordsDictionary[j].WordContent == sword)
-                        {
-                            if (htmltag == "title")
-                            {
-                                if (!wordsDictionary[j].CheckIDexists(i))
-                                {
-                                    wordsDictionary[j].appendID_tag(i, "<" + htmltag + ">");
-                                    flag = true;
-                                }
-                            }
-                            else
-                            {
-                                if (wordsDictionary[j].CheckIDexists(i))
-                                {
-                                    flag = true;
-                                    break;
-                                }
-                                wordsDictionary[j].appendID_tag(i, "<" + htmltag + ">");
-                            }
-                        }    
-                    }
-                    if (!flag)
-                    {
-                        wordsDictionary[idWords] = new Word(idWords, sword, i, "<" + htmltag + ">");
-                        idWords++;
-                    }
-                }
-            }
-            idWords--;
-        }
-
-        private static List<string> ReadStoppingList()
-        {
-            var stoppingList = new List<string>();
-            using (var sr = new StreamReader(HtmlDocsPath + "stopping-list.txt"))
-            {
-                string line;
-                while ((line = sr.ReadLine()) != null)
-                {
-                    stoppingList.Add(line);
-                }
-                return stoppingList;
-            }
-        }
-
-        private static bool CheckStoppingList(string str, IEnumerable<string> stoppingList)
-        {
-            return stoppingList.All(t => str != t);
-        }
+       
     }
 }
-
-
-

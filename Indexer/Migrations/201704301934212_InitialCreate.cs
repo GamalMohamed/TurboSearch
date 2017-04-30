@@ -13,7 +13,7 @@ namespace Indexer.Migrations
                     {
                         Id = c.Int(nullable: false, identity: true),
                         WordContent = c.String(),
-                        UrlIdTags = c.String(),
+                        WordStorings = c.String(),
                     })
                 .PrimaryKey(t => t.Id);
             

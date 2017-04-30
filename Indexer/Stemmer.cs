@@ -68,7 +68,7 @@ using System;
 using System.Text;
 
 
-namespace TurboSearch
+namespace Indexer
 {
     public class Porter2
     {

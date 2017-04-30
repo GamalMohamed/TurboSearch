@@ -5,15 +5,15 @@ namespace Indexer.Migrations
     using System.Data.Entity.Migrations;
     using System.Linq;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<TurboSearch.WordContext>
+    internal sealed class Configuration : DbMigrationsConfiguration<Indexer.WordContext>
     {
         public Configuration()
         {
             AutomaticMigrationsEnabled = false;
-            ContextKey = "TurboSearch.WordContext";
+            ContextKey = "Indexer.WordContext";
         }
 
-        protected override void Seed(TurboSearch.WordContext context)
+        protected override void Seed(Indexer.WordContext context)
         {
             //  This method will be called after migrating to the latest version.
 

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Indexer
+namespace TurboSearch
 {
     public class Word
     {
@@ -33,10 +33,10 @@ namespace Indexer
             WordStorings = "";
         }
 
-       
+
     }
 
-    public class WordContext : DbContext
+    public class WordsContext : DbContext
     {
         public DbSet<Word> Words { get; set; }
     }

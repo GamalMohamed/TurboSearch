@@ -13,7 +13,7 @@ namespace Indexer.Migrations
         
         string IMigrationMetadata.Id
         {
-            get { return "201704301934212_InitialCreate"; }
+            get { return "201705011849265_InitialCreate"; }
         }
         
         string IMigrationMetadata.Source

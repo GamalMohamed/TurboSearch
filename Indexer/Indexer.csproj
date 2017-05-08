@@ -4,13 +4,28 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D2F9FDB0-9AF1-4AD5-AA4C-FA2A5A50BCDE}</ProjectGuid>
+    <ProjectGuid>{33AD1D17-5D31-4A43-8DCC-5F94BA480B32}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Indexer</RootNamespace>
     <AssemblyName>Indexer</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -52,13 +67,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Migrations\201704301934212_InitialCreate.cs" />
-    <Compile Include="Migrations\201704301934212_InitialCreate.Designer.cs">
-      <DependentUpon>201704301934212_InitialCreate.cs</DependentUpon>
+    <Compile Include="Migrations\201705011849265_InitialCreate.cs" />
+    <Compile Include="Migrations\201705011849265_InitialCreate.Designer.cs">
+      <DependentUpon>201705011849265_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201705011940128_FirstMigration.cs" />
+    <Compile Include="Migrations\201705011940128_FirstMigration.Designer.cs">
+      <DependentUpon>201705011940128_FirstMigration.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Search.cs" />
     <Compile Include="Stemmer.cs" />
     <Compile Include="Word.cs" />
   </ItemGroup>
@@ -67,8 +87,23 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201704301934212_InitialCreate.resx">
-      <DependentUpon>201704301934212_InitialCreate.cs</DependentUpon>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.2 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201705011849265_InitialCreate.resx">
+      <DependentUpon>201705011849265_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201705011940128_FirstMigration.resx">
+      <DependentUpon>201705011940128_FirstMigration.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

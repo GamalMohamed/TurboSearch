@@ -8,14 +8,14 @@ namespace TurboSearch
 {
     public class Search
     {
-        private readonly Porter2 _stemer;
         private const string Path = @"D:\Misc\temp0\";
         private string _inputQuery;
         private int _searchType;
         private string[] _distinctqueryWords;
-        private List<string> _wordsResults;
-        private readonly List<string> _phraseResults = new List<string>();
+        private readonly Porter2 _stemer;
 
+        public List<string> WordsResults { get; set; } // IDs for docs containing word(s)
+        public List<string> PhraseResults { get; set; } // IDs for docs containing the phrase
         public Dictionary<string, string> WordsDictionary { get; set; }
 
         public Search(WordsContext db)
@@ -23,6 +23,7 @@ namespace TurboSearch
             // Get all words from DB and store it in a dictionary
             WordsDictionary = db.Words.ToDictionary(t => t.WordContent, t => t.WordStorings);
             _stemer = new Porter2();
+            PhraseResults = new List<string>();
         }
 
         public void Query(string input)
@@ -52,7 +53,7 @@ namespace TurboSearch
             if (_inputQuery != null)
             {
                 Console.Write("\nQuery: " + _inputQuery + "\nMutual docs: ");
-                InnerPrint(_searchType == 2 ? _phraseResults : _wordsResults);
+                InnerPrint(_searchType == 2 ? PhraseResults : WordsResults);
                 Console.WriteLine();
             }
         }
@@ -98,16 +99,15 @@ namespace TurboSearch
         private void PhraseSearch()
         {
             QueryWords(false); //I now have results list ready!
-            Console.WriteLine("No of suspected docs:{0}", _wordsResults.Count);
-            //Console.ReadKey();
-            foreach (var t in _wordsResults)
+            Console.WriteLine("No of candidate docs:{0}", WordsResults.Count);
+            foreach (var t in WordsResults)
             {
                 if (t != "") //just cautious check!
                 {
                     var newPath = Path + t + ".html";
                     if (File.ReadAllText(newPath).Contains(_inputQuery))
                     {
-                        _phraseResults.Add(t);
+                        PhraseResults.Add(t);
                     }
                 }
             }
@@ -180,7 +180,7 @@ namespace TurboSearch
                 {
                     if (t.Count>0)
                     {
-                        _wordsResults = t;
+                        WordsResults = t;
                         break;
                     }
                 }
@@ -188,13 +188,13 @@ namespace TurboSearch
                 {
                     if (wordsList[i].Count > 0)
                     {
-                        _wordsResults = _wordsResults.Intersect(wordsList[i]).ToList();
+                        WordsResults = WordsResults.Intersect(wordsList[i]).ToList();
                     }
                 }
             }
             else
             {
-                _wordsResults = SearchForWord();
+                WordsResults = SearchForWord();
             }
         }
     }

@@ -34,7 +34,7 @@ namespace TurboSearch
             }
         }
 
-        private static bool CheckSl(string str, List<string> stoppingList)
+        private static bool CheckStoppingList(string str, List<string> stoppingList)
         {
             foreach (string t in stoppingList)
             {
@@ -112,7 +112,7 @@ namespace TurboSearch
                 foreach (string word in parts)
                 {
                     string sword = Stemer.stem(word.ToLower());
-                    if (Regex.IsMatch(sword, @"^[a-z]+$") && CheckSl(sword, stoppingList)
+                    if (Regex.IsMatch(sword, @"^[a-z]+$") && CheckStoppingList(sword, stoppingList)
                         && sword != " " && sword != "" && sword != "\n" && sword != "\t")
                     {
                         stemmedTotalWordsofTag = stemmedTotalWordsofTag + sword + ' ';

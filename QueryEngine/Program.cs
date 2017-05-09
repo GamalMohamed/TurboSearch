@@ -9,12 +9,19 @@ namespace TurboSearch
     class Program
     {
         public static WordsContext Db = new WordsContext();
+
         static void Main(string[] args)
         {
             var fetcher = new Search(Db);
             Console.Write("Enter Query: ");
             fetcher.Query(Console.ReadLine());
+
             fetcher.PrintResults();
+
+            var ranker = new Ranker(fetcher);
+            ranker.Rank();
+            
+            //fetcher.PrintResults();
 
         }
     }

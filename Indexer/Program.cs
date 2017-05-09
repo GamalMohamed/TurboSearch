@@ -144,7 +144,6 @@ namespace TurboSearch
 
         private static void Main(string[] args)
         {
-            /*
             int countArr = 0;
             var wordMap = new Dictionary<string, string>();
             var wordMapArr = new string[MaxWordsNo];
@@ -187,18 +186,7 @@ namespace TurboSearch
                 Console.WriteLine(k);
             }
             #endregion
-            */
-
-
-
-            #region Search
-            var fetcher =new Search(Db);
-            Console.Write("Enter Query: ");
-            fetcher.Query(Console.ReadLine());
-            fetcher.PrintResults();
-
-            #endregion
-
+            
         }
     }
 }

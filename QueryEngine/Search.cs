@@ -9,14 +9,15 @@ namespace TurboSearch
     public class Search
     {
         private const string Path = @"D:\Misc\temp0\";
-        private string _inputQuery;
-        private int _searchType;
-        private string[] _distinctqueryWords;
         private readonly Porter2 _stemer;
 
+        public int SearchType { get; set; }
+        public string[] DistinctqueryWords { get; set; }
+        public string InputQuery { get; set; }
         public List<string> WordsResults { get; set; } // IDs for docs containing word(s)
         public List<string> PhraseResults { get; set; } // IDs for docs containing the phrase
         public Dictionary<string, string> WordsDictionary { get; set; }
+        public Word QueryWordInfo { get; set; }
 
         public Search(WordsContext db)
         {
@@ -28,16 +29,16 @@ namespace TurboSearch
 
         public void Query(string input)
         {
-            _searchType = ManipulateInputQuery(input);
-            if (_searchType == -1)
+            SearchType = ManipulateInputQuery(input);
+            if (SearchType == -1)
             {
                 Console.WriteLine("Empty string!!");
             }
-            else if (_searchType == 1)
+            else if (SearchType == 1)
             {
                 QueryWords(true);
             }
-            else if (_searchType == 2)
+            else if (SearchType == 2)
             {
                 PhraseSearch();
             }
@@ -50,10 +51,10 @@ namespace TurboSearch
 
         public void PrintResults()
         {
-            if (_inputQuery != null)
+            if (InputQuery != null)
             {
-                Console.Write("\nQuery: " + _inputQuery + "\nMutual docs: ");
-                InnerPrint(_searchType == 2 ? PhraseResults : WordsResults);
+                Console.Write("\nQuery: " + InputQuery + "\nMutual docs: ");
+                InnerPrint(SearchType == 2 ? PhraseResults : WordsResults);
                 Console.WriteLine();
             }
         }
@@ -80,18 +81,18 @@ namespace TurboSearch
             }
             if (input[0] == '"' && input[input.Length - 1] == '"') // Quoted Phrase
             {
-                _inputQuery = input.Substring(1, input.Length - 2);
+                InputQuery = input.Substring(1, input.Length - 2);
                 return 2;
             }
 
             if (input.Split(' ').Length == 1) //one word
             {
-                _inputQuery = input;
+                InputQuery = input;
                 return 1;
             }
             else
             {
-                _inputQuery = input; // sentence
+                InputQuery = input; // sentence
                 return 3;
             }
         }
@@ -105,7 +106,7 @@ namespace TurboSearch
                 if (t != "") //just cautious check!
                 {
                     var newPath = Path + t + ".html";
-                    if (File.ReadAllText(newPath).Contains(_inputQuery))
+                    if (File.ReadAllText(newPath).Contains(InputQuery))
                     {
                         PhraseResults.Add(t);
                     }
@@ -117,13 +118,13 @@ namespace TurboSearch
         private List<string>[] PreprocessQuery()
         {
             char[] delimiters = { };
-            var queryWords = _inputQuery.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
-            _distinctqueryWords = queryWords.Distinct().ToArray();
-            for (int i = 0; i < _distinctqueryWords.Length; i++)
-                _distinctqueryWords[i] = _stemer.stem(_distinctqueryWords[i].ToLower());
+            var queryWords = InputQuery.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+            DistinctqueryWords = queryWords.Distinct().ToArray();
+            for (int i = 0; i < DistinctqueryWords.Length; i++)
+                DistinctqueryWords[i] = _stemer.stem(DistinctqueryWords[i].ToLower());
 
-            var allLists = new List<string>[_distinctqueryWords.Length];
-            for (int i = 0; i < _distinctqueryWords.Length; i++)
+            var allLists = new List<string>[DistinctqueryWords.Length];
+            for (int i = 0; i < DistinctqueryWords.Length; i++)
                 allLists[i] = new List<string>();
 
             return allLists;
@@ -132,11 +133,11 @@ namespace TurboSearch
         // Search for sentence and get each word list
         private List<string>[] SearchForSentence(List<string>[] wordsList)
         {
-            for (int i = 0; i < _distinctqueryWords.Length; i++)
+            for (int i = 0; i < DistinctqueryWords.Length; i++)
             {
-                if (WordsDictionary.ContainsKey(_distinctqueryWords[i]))
+                if (WordsDictionary.ContainsKey(DistinctqueryWords[i]))
                 {
-                    var wordStoring = WordsDictionary[_distinctqueryWords[i]];
+                    var wordStoring = WordsDictionary[DistinctqueryWords[i]];
                     if (wordStoring != null)
                     {
                         var word_doc = wordStoring.Split(',');
@@ -153,7 +154,8 @@ namespace TurboSearch
 
         private List<string> SearchForWord()
         {
-            var stemmedWord = _stemer.stem(_inputQuery.ToLower()); //Preprocess word
+            var stemmedWord = _stemer.stem(InputQuery.ToLower()); //Preprocess word
+
             var wordList = new List<string>();
             if (WordsDictionary.ContainsKey(stemmedWord))
             {
@@ -164,9 +166,12 @@ namespace TurboSearch
                     var docId_tag_occ = word.Split('$');
                     wordList.Add(docId_tag_occ[0]);
                 }
+                QueryWordInfo = new Word()
+                {
+                    Id = 1,WordContent = stemmedWord, WordStorings = wordStoring
+                };
             }
             return wordList;
-
         }
 
         private void QueryWords(bool isWord)
@@ -178,7 +183,7 @@ namespace TurboSearch
                 // Combining results for sentences
                 foreach (var t in wordsList)
                 {
-                    if (t.Count>0)
+                    if (t.Count > 0)
                     {
                         WordsResults = t;
                         break;

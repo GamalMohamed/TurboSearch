@@ -18,6 +18,9 @@ namespace TurboSearch
 
             fetcher.PrintResults();
 
+            Console.WriteLine("\n\n");
+            Console.ReadKey();
+
             var ranker = new Ranker(fetcher);
             ranker.Rank();
             

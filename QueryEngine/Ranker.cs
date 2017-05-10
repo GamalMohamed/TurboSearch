@@ -9,12 +9,12 @@ namespace TurboSearch
     public class Ranker
     {
         private readonly Search _fetcher;
-        private Dictionary<string, string> Tag_DocID;
+        private List<Dictionary<string, List<string>>> Tag_DocsIDsList;
 
         public Ranker(Search fetcher)
         {
             _fetcher = fetcher;
-            Tag_DocID = new Dictionary<string, string>();
+            Tag_DocsIDsList = new List<Dictionary<string, List<string>>>();
         }
 
         // Sorts the docs IDs according to relevance and popularity
@@ -22,56 +22,77 @@ namespace TurboSearch
         {
             if (_fetcher.SearchType == 1)
                 RankWord();
-            else if (_fetcher.SearchType == 2)
+            else if (_fetcher.SearchType == 3)
                 RankSentence();
-
-
-
 
         }
 
-        private void SplitWordInfo()
+        private void SplitWordInfo(string wordStoring, int i)
         {
-            var word_doc = _fetcher.QueryWordInfo.WordStorings.Split(',');
-            for (var i = 0; i < word_doc.Length-1; i++)
+            var word_doc = wordStoring.Split(',');
+            for (var j = 0; j < word_doc.Length-1; j++)
             {
-                var word = word_doc[i];
-                var docId_tag_occ = word.Split('$');
-                if (Tag_DocID.ContainsKey(docId_tag_occ[1]))
+                var docId_tag_occ = word_doc[j].Split('$');
+                if (Tag_DocsIDsList[i].ContainsKey(docId_tag_occ[1]))
                 {
-                    var tagDocs = Tag_DocID[docId_tag_occ[1]];
-                    Tag_DocID[docId_tag_occ[1]] = tagDocs + " | " + docId_tag_occ[0];
+                    Tag_DocsIDsList[i][docId_tag_occ[1]].Add(docId_tag_occ[0]);
                 }
                 else
                 {
-                    Tag_DocID.Add(docId_tag_occ[1], docId_tag_occ[0]);
+                    Tag_DocsIDsList[i].Add(docId_tag_occ[1],new List<string>() { docId_tag_occ[0] });
                 }
             }
         }
 
         private void RankWord()
         {
-            SplitWordInfo();
-            PrintTagSortedDocs();
-
-            
+            Tag_DocsIDsList.Add(new Dictionary<string, List<string>>());
+            SplitWordInfo(_fetcher.QueryWordInfo.WordStorings,0);
+            PrintWordTagSortedDocs(); 
         }
 
         private void RankSentence()
         {
-
+            for (var i = 0; i < _fetcher.DistinctqueryWords.Length; i++)
+            {
+                var word = _fetcher.DistinctqueryWords[i];
+                Tag_DocsIDsList.Add(new Dictionary<string, List<string>>());
+                if (_fetcher.WordsDictionary.ContainsKey(word))
+                {
+                    SplitWordInfo(_fetcher.WordsDictionary[word],i);
+                }
+            }
+            PrintWordTagSortedDocs();
         }
 
-        public void PrintTagSortedDocs()
+
+
+        public void PrintWordTagSortedDocs()
         {
             string[] tags = {"title", "h1", "h2", "h3", "p"};
-            foreach (var t in tags)
+            var traversedDoc=new HashSet<string>();
+            foreach (var tag in tags)
             {
-                if (Tag_DocID.ContainsKey(t))
+                Console.WriteLine("{0} tag:\n", tag);
+                foreach (var wordDictionary in Tag_DocsIDsList)
                 {
-                    Console.WriteLine("{0} tag:\n {1}",t, Tag_DocID[t]);
-                    Console.WriteLine("*********************************");
+                    if (wordDictionary.ContainsKey(tag))
+                    {
+                        var filterdWordsList = wordDictionary[tag].Intersect(_fetcher.WordsResults).ToList();
+                        if (filterdWordsList.Count > 0)
+                        {
+                            foreach (var d in filterdWordsList)
+                            {
+                                if (!traversedDoc.Contains(d))
+                                {
+                                    Console.Write(d + " | ");
+                                    traversedDoc.Add(d);
+                                }
+                            }
+                        }
+                    }
                 }
+                Console.WriteLine("\n*********************************");
             }
         }
 

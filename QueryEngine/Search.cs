@@ -8,8 +8,8 @@ namespace TurboSearch
 {
     public class Search
     {
-        private const string Path = @"D:\Misc\temp0\";
         private readonly Porter2 _stemer;
+        public readonly string Path;
 
         public int SearchType { get; set; }
         public string[] DistinctqueryWords { get; set; }
@@ -25,6 +25,7 @@ namespace TurboSearch
             WordsDictionary = db.Words.ToDictionary(t => t.WordContent, t => t.WordStorings);
             _stemer = new Porter2();
             PhraseResults = new List<string>();
+            Path = @"D:\Misc\temp0\";
         }
 
         public void Query(string input)

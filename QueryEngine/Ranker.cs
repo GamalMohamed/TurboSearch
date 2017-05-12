@@ -11,27 +11,32 @@ namespace TurboSearch
     public class Ranker
     {
         private readonly Search _fetcher;
-        private List<Dictionary<string, List<string>>> Tag_DocsIDsList;
-        private Dictionary<string, int> _hrefs;
-        private Dictionary<string, string> href_docID;
+        private readonly List<Dictionary<string, List<string>>> _tagDocsIDsList;
+        private readonly Dictionary<string, int> _hrefsReferences;
+        private readonly Dictionary<string, string> _docIdUrl;
+        private readonly Dictionary<string, string> _urlDocId;
+        private Dictionary<string, int> _docIdReferences;
+        private readonly UrlPopularityContext _urlPopularityContext = new UrlPopularityContext();
 
         public Ranker(Search fetcher)
         {
             _fetcher = fetcher;
-            Tag_DocsIDsList = new List<Dictionary<string, List<string>>>();
-            _hrefs = new Dictionary<string, int>();
-            href_docID = new Dictionary<string, string>();
+            _tagDocsIDsList = new List<Dictionary<string, List<string>>>();
+            _hrefsReferences = new Dictionary<string, int>();
+            _docIdUrl = new Dictionary<string, string>();
+            _urlDocId = new Dictionary<string, string>();
+            _docIdReferences = new Dictionary<string, int>();
         }
 
         // Sorts the docs IDs according to relevance and popularity
         public void Rank()
         {
-            /*if (_fetcher.SearchType == 1)
+            if (_fetcher.SearchType == 1)
                 RankWord();
             else if (_fetcher.SearchType == 3)
-                RankSentence();*/
+                RankSentence();
             PopularityRanking();
-
+            PrintSortedDocs();
         }
 
         private void SplitWordInfo(string wordStoring, int i)
@@ -40,22 +45,21 @@ namespace TurboSearch
             for (var j = 0; j < word_doc.Length - 1; j++)
             {
                 var docId_tag_occ = word_doc[j].Split('$');
-                if (Tag_DocsIDsList[i].ContainsKey(docId_tag_occ[1]))
+                if (_tagDocsIDsList[i].ContainsKey(docId_tag_occ[1]))
                 {
-                    Tag_DocsIDsList[i][docId_tag_occ[1]].Add(docId_tag_occ[0]);
+                    _tagDocsIDsList[i][docId_tag_occ[1]].Add(docId_tag_occ[0]);
                 }
                 else
                 {
-                    Tag_DocsIDsList[i].Add(docId_tag_occ[1], new List<string>() { docId_tag_occ[0] });
+                    _tagDocsIDsList[i].Add(docId_tag_occ[1], new List<string>() { docId_tag_occ[0] });
                 }
             }
         }
 
         private void RankWord()
         {
-            Tag_DocsIDsList.Add(new Dictionary<string, List<string>>());
+            _tagDocsIDsList.Add(new Dictionary<string, List<string>>());
             SplitWordInfo(_fetcher.QueryWordInfo.WordStorings, 0);
-            PrintTagSortedDocs();
         }
 
         private void RankSentence()
@@ -63,34 +67,37 @@ namespace TurboSearch
             for (var i = 0; i < _fetcher.DistinctqueryWords.Length; i++)
             {
                 var word = _fetcher.DistinctqueryWords[i];
-                Tag_DocsIDsList.Add(new Dictionary<string, List<string>>());
+                _tagDocsIDsList.Add(new Dictionary<string, List<string>>());
                 if (_fetcher.WordsDictionary.ContainsKey(word))
                 {
                     SplitWordInfo(_fetcher.WordsDictionary[word], i);
                 }
             }
-            PrintTagSortedDocs();
         }
 
-        /*
-          Sort Docs according to no. of occs
-         */
         private void PopularityRanking()
         {
-            ManipulateDocs(_fetcher.Path);
-            SortDocsByPopularity();
-
+            if (!_urlPopularityContext.PopularityList.Any())
+            {
+                ManipulateDocs(_fetcher.Path);
+                FillUrlPopularityDb();
+            }
+            else
+            {
+                _docIdReferences = _urlPopularityContext.PopularityList.ToDictionary
+                    (t => t.Id.ToString(),t => t.ReferencesNumber);
+            }
         }
 
         private void ManipulateDocs(string path)
         {
             // 1. Read html docs in directory one by one
-            var dir = new System.IO.DirectoryInfo(path);
-            var filesCount = dir.GetFiles().Length;
+            //var dir = new System.IO.DirectoryInfo(path);
+            //var filesCount = dir.GetFiles().Length;
 
             MapLinkId(path); // 2. Map each link to its docID
 
-            for (int i = 1; i <= filesCount; i++)
+            for (int i = 1; i <= _docIdUrl.Count; i++)
             {
                 var docPath = path + i + ".html";
                 if (!File.Exists(docPath))
@@ -99,7 +106,7 @@ namespace TurboSearch
                 doc.Load(docPath);
 
                 Console.WriteLine("extracting hrefs from doc " + i);
-                ExtractDocHrefs(doc);
+                ExtractDocHrefs(doc, i.ToString());
             }
         }
 
@@ -108,51 +115,86 @@ namespace TurboSearch
             var links = File.ReadAllLines(path + "log.txt");
             for (int i = 1; i <= links.Length; i++)
             {
-                href_docID.Add(links[i-1], i.ToString());
+                _docIdUrl.Add(i.ToString(), links[i - 1]);
+                _urlDocId.Add(links[i - 1], i.ToString());
             }
         }
 
-        private void ExtractDocHrefs(HtmlDocument doc)
+        private void ExtractDocHrefs(HtmlDocument doc, string docId)
         {
-            // Extract hrefs from doc & Add them to a dictionary that holds number of occurences 
-            // of each link
+            var docUrlPartitions = _docIdUrl[docId].Split('/');
+            var domain = (docUrlPartitions[0] + "//" + docUrlPartitions[2]);
+
+            // Extract hrefs from doc & Add them to a dictionary that holds number of link occurences 
             var linkk = doc.DocumentNode.SelectNodes("//a[@href]");
             if (linkk != null)
             {
-                foreach (HtmlNode link in linkk)
+                foreach (var link in linkk)
                 {
-                    HtmlAttribute att = link.Attributes["href"];
-                    if (att.Value[0] == '#')
+                    var att = link.Attributes["href"];
+                    if (att.Value[0] == '#' || att.Value.Length < 2)
                         continue;
-                    if (_hrefs.ContainsKey(att.Value))
+                    string fullhref = "";
+                    if (att.Value[0] == '/' && att.Value[1] == '/')
                     {
-                        _hrefs[att.Value] = _hrefs[att.Value] + 1;
+                        fullhref = "https://" + att.Value.Substring(2);
                     }
                     else
                     {
-                        _hrefs.Add(att.Value, 1);
+                        fullhref = att.Value[0] == '/' ? domain + att.Value : att.Value;
+                    }
+                    if (_urlDocId.ContainsKey(fullhref))
+                    {
+                        if (_hrefsReferences.ContainsKey(fullhref))
+                        {
+                            _hrefsReferences[fullhref] = _hrefsReferences[fullhref] + 1;
+                        }
+                        else
+                        {
+                            _hrefsReferences.Add(fullhref, 1);
+                        }
                     }
                 }
             }
         }
 
-        private void SortDocsByPopularity()
+        private void FillUrlPopularityDb()
         {
-            
+            Console.WriteLine("\nNo. of links " + _hrefsReferences.Count);
+            Console.ReadKey();
+            int i = 1;
+            foreach (var href in _hrefsReferences)
+            {
+                Console.WriteLine("Filling Db " + i++);
+                var popularity = new UrlPopularity()
+                {
+                    Id = Int32.Parse(_urlDocId[href.Key]),
+                    ReferencesNumber = href.Value,
+                    Url = href.Key
+                };
+                _urlPopularityContext.PopularityList.Add(popularity);
+                _urlPopularityContext.SaveChanges();
+            }
         }
 
-        public void PrintTagSortedDocs()
+        private void SortDocsByPopularity(ref List<string> filterdWordsList)
+        {
+            filterdWordsList.Sort((a, b) => _docIdReferences[a].CompareTo(_docIdReferences[b]));
+        }
+
+        public void PrintSortedDocs()
         {
             string[] tags = { "title", "h1", "h2", "h3", "p" };
             var traversedDoc = new HashSet<string>();
             foreach (var tag in tags)
             {
                 Console.WriteLine("{0} tag:\n", tag);
-                foreach (var wordDictionary in Tag_DocsIDsList)
+                foreach (var wordDictionary in _tagDocsIDsList)
                 {
                     if (wordDictionary.ContainsKey(tag))
                     {
                         var filterdWordsList = wordDictionary[tag].Intersect(_fetcher.WordsResults).ToList();
+                        SortDocsByPopularity(ref filterdWordsList);
                         if (filterdWordsList.Count > 0)
                         {
                             foreach (var d in filterdWordsList)

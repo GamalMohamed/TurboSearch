@@ -1,5 +1,6 @@
-﻿@model IEnumerable<WebApp.Models.WebPage>
-
+﻿@model PagedList.IPagedList<WebApp.Models.WebPage>
+@using PagedList.Mvc;
+<link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" />
 @{
     ViewBag.Title = "Results";
 }
@@ -10,10 +11,10 @@
 <table class="table">
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.Title)
+            @Html.Display("Title")
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Url)
+            @Html.Display("Url")
         </th>
     </tr>
 
@@ -30,3 +31,7 @@
     }
 
 </table>
+
+Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+@Html.PagedListPager(Model, page => Url.Action("Query", new { page }))

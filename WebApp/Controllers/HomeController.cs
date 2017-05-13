@@ -5,6 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using TurboSearch;
 using WebApp.Models;
+using PagedList;
 
 namespace WebApp.Controllers
 {
@@ -32,16 +33,17 @@ namespace WebApp.Controllers
         }
 
 
-        public ActionResult Query()
+        public ViewResult Query(int? page)
         {
             var resulsList = new List<WebPage>();
             foreach (var item in _fetcher.Ranker.UrlTitleFinalResults)
             {
-                var page = new WebPage() { Title = item.Value, Url = item.Key, Id = 1 };
-                resulsList.Add(page);
+                var webPage = new WebPage() { Title = item.Value, Url = item.Key };
+                resulsList.Add(webPage);
             }
-
-            return View(resulsList);
+            int pageSize = 10;
+            int pageNumber = (page ?? 1);
+            return View(resulsList.ToPagedList(pageNumber,pageSize));
         }
 
         [HttpPost]

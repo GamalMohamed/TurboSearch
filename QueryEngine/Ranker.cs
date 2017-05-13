@@ -189,11 +189,11 @@ namespace TurboSearch
         {
             var docPath = _fetcher.Path + docId + ".html";
             if (!File.Exists(docPath))
-                return "DEFAULT";
+                return "Default";
             var doc = new HtmlDocument();
             doc.Load(docPath);
             var title= doc.DocumentNode.Descendants("title").FirstOrDefault();
-            return title==null ? "DEFAULT":title.InnerText;
+            return title==null ? "Default":title.InnerText;
         }
 
         public void PrintSortedDocs()

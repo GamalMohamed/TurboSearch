@@ -16,16 +16,11 @@ namespace TurboSearch
             Console.Write("Enter Query: ");
             fetcher.Query(Console.ReadLine());
 
-            //fetcher.PrintResults();
-
             Console.WriteLine("\n\n");
-            //Console.ReadKey();
 
             var ranker = new Ranker(fetcher);
             ranker.Rank();
-            
-            //fetcher.PrintResults();
-
+            ranker.PrintSortedDocs();
         }
     }
 }

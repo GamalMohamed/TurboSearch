@@ -18,6 +18,8 @@ namespace TurboSearch
         private Dictionary<string, int> _docIdReferences;
         private readonly UrlPopularityContext _urlPopularityContext = new UrlPopularityContext();
 
+        public List<string> ResultsList { get; set; }
+
         public Ranker(Search fetcher)
         {
             _fetcher = fetcher;
@@ -26,6 +28,7 @@ namespace TurboSearch
             _docIdUrl = new Dictionary<string, string>();
             _urlDocId = new Dictionary<string, string>();
             _docIdReferences = new Dictionary<string, int>();
+            ResultsList=new List<string>();
         }
 
         // Sorts the docs IDs according to relevance and popularity
@@ -36,7 +39,6 @@ namespace TurboSearch
             else if (_fetcher.SearchType == 3)
                 RankSentence();
             PopularityRanking();
-            PrintSortedDocs();
         }
 
         private void SplitWordInfo(string wordStoring, int i)
@@ -105,7 +107,7 @@ namespace TurboSearch
                 var doc = new HtmlDocument();
                 doc.Load(docPath);
 
-                Console.WriteLine("extracting hrefs from doc " + i);
+                //Console.WriteLine("extracting hrefs from doc " + i);
                 ExtractDocHrefs(doc, i.ToString());
             }
         }
@@ -160,12 +162,12 @@ namespace TurboSearch
 
         private void FillUrlPopularityDb()
         {
-            Console.WriteLine("\nNo. of links " + _hrefsReferences.Count);
-            Console.ReadKey();
-            int i = 1;
+            //Console.WriteLine("\nNo. of links " + _hrefsReferences.Count);
+            //Console.ReadKey();
+            //int i = 1;
             foreach (var href in _hrefsReferences)
             {
-                Console.WriteLine("Filling Db " + i++);
+                //Console.WriteLine("Filling Db " + i++);
                 var popularity = new UrlPopularity()
                 {
                     Id = Int32.Parse(_urlDocId[href.Key]),
@@ -188,7 +190,7 @@ namespace TurboSearch
             var traversedDoc = new HashSet<string>();
             foreach (var tag in tags)
             {
-                Console.WriteLine("{0} tag:\n", tag);
+                //Console.WriteLine("{0} tag:\n", tag);
                 foreach (var wordDictionary in _tagDocsIDsList)
                 {
                     if (wordDictionary.ContainsKey(tag))
@@ -201,14 +203,15 @@ namespace TurboSearch
                             {
                                 if (!traversedDoc.Contains(d))
                                 {
-                                    Console.Write(d + " | ");
+                                    //Console.Write(d + " | ");
+                                    ResultsList.Add(d);
                                     traversedDoc.Add(d);
                                 }
                             }
                         }
                     }
                 }
-                Console.WriteLine("\n*********************************");
+                //Console.WriteLine("\n*********************************");
             }
         }
 

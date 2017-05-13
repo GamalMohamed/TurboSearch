@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Indexer", "Indexer\Indexer.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueryEngine", "QueryEngine\QueryEngine.csproj", "{3ACC66CD-159E-40F5-9B60-D44530053AF0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApp", "WebApp\WebApp.csproj", "{51109FD9-9B74-408A-9F33-A19715CC4D4E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{3ACC66CD-159E-40F5-9B60-D44530053AF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3ACC66CD-159E-40F5-9B60-D44530053AF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3ACC66CD-159E-40F5-9B60-D44530053AF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51109FD9-9B74-408A-9F33-A19715CC4D4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51109FD9-9B74-408A-9F33-A19715CC4D4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51109FD9-9B74-408A-9F33-A19715CC4D4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51109FD9-9B74-408A-9F33-A19715CC4D4E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

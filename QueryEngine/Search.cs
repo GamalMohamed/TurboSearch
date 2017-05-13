@@ -10,6 +10,7 @@ namespace TurboSearch
     {
         private readonly Porter2 _stemer;
         private readonly WordsContext _db = new WordsContext();
+        private static string _path = @"D:\Misc\temp0\";
 
         public int SearchType { get; set; }
         public string[] DistinctqueryWords { get; set; }
@@ -27,7 +28,7 @@ namespace TurboSearch
             WordsDictionary = _db.Words.ToDictionary(t => t.WordContent, t => t.WordStorings);
             _stemer = new Porter2();
             PhraseResults = new List<string>();
-            Path = @"D:\Misc\temp0\";
+            Path = _path;
         }
 
         public void Query(string input)

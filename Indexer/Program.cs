@@ -14,7 +14,7 @@ namespace TurboSearch
         private static readonly Porter2 Stemer = new Porter2();
         private const string Path = @"D:\Misc\temp0\";
         private const int NumOfDocs = 4500;
-        private const long MaxWordsNo = 10000000;
+        private const int MaxWordsNo = 100000000;
 
         public static WordsContext Db = new WordsContext();
 
@@ -178,6 +178,7 @@ namespace TurboSearch
 
             #region Add Words To DB
             Console.WriteLine("Adding {0} words to database", countArr);
+            Console.ReadKey();
             for (int k = 0; k < countArr; k++)
             {
                 words[k].SetAttributes(k, wordMapArr[k], wordMap[wordMapArr[k]]);

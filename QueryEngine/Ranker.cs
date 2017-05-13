@@ -18,7 +18,7 @@ namespace TurboSearch
         private Dictionary<string, int> _docIdReferences;
         private readonly UrlPopularityContext _urlPopularityContext = new UrlPopularityContext();
 
-        public List<string> ResultsList { get; set; }
+        public Dictionary<string,string> UrlTitleFinalResults { get; set; }
 
         public Ranker(Search fetcher)
         {
@@ -28,7 +28,7 @@ namespace TurboSearch
             _docIdUrl = new Dictionary<string, string>();
             _urlDocId = new Dictionary<string, string>();
             _docIdReferences = new Dictionary<string, int>();
-            ResultsList=new List<string>();
+            UrlTitleFinalResults=new Dictionary<string, string>();
         }
 
         // Sorts the docs IDs according to relevance and popularity
@@ -86,6 +86,7 @@ namespace TurboSearch
             }
             else
             {
+                MapLinkId(_fetcher.Path);
                 _docIdReferences = _urlPopularityContext.PopularityList.ToDictionary
                     (t => t.Id.ToString(),t => t.ReferencesNumber);
             }
@@ -184,13 +185,24 @@ namespace TurboSearch
             filterdWordsList.Sort((a, b) => _docIdReferences[a].CompareTo(_docIdReferences[b]));
         }
 
+        private string GetDocTitle(string docId)
+        {
+            var docPath = _fetcher.Path + docId + ".html";
+            if (!File.Exists(docPath))
+                return "DEFAULT";
+            var doc = new HtmlDocument();
+            doc.Load(docPath);
+            var title= doc.DocumentNode.Descendants("title").FirstOrDefault();
+            return title==null ? "DEFAULT":title.InnerText;
+        }
+
         public void PrintSortedDocs()
         {
             string[] tags = { "title", "h1", "h2", "h3", "p" };
             var traversedDoc = new HashSet<string>();
             foreach (var tag in tags)
             {
-                //Console.WriteLine("{0} tag:\n", tag);
+                Console.WriteLine("{0} tag:\n", tag);
                 foreach (var wordDictionary in _tagDocsIDsList)
                 {
                     if (wordDictionary.ContainsKey(tag))
@@ -203,18 +215,16 @@ namespace TurboSearch
                             {
                                 if (!traversedDoc.Contains(d))
                                 {
-                                    //Console.Write(d + " | ");
-                                    ResultsList.Add(d);
+                                    Console.Write(d + " | ");
+                                    UrlTitleFinalResults.Add(_docIdUrl[d],GetDocTitle(d));
                                     traversedDoc.Add(d);
                                 }
                             }
                         }
                     }
                 }
-                //Console.WriteLine("\n*********************************");
+                Console.WriteLine("\n*********************************");
             }
         }
-
-
     }
 }

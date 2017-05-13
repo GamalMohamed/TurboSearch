@@ -1,0 +1,32 @@
+﻿@model IEnumerable<WebApp.Models.WebPage>
+
+@{
+    ViewBag.Title = "Results";
+}
+
+<h2>Results</h2>
+
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Title)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Url)
+        </th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                <a href=@item.Url>@item.Title</a>
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Url)
+            </td>
+        </tr>
+    }
+
+</table>

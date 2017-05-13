@@ -8,19 +8,11 @@ namespace TurboSearch
 {
     class Program
     {
-        public static WordsContext Db = new WordsContext();
-
         static void Main(string[] args)
         {
-            var fetcher = new Search(Db);
+            var fetcher = new Search();
             Console.Write("Enter Query: ");
             fetcher.Query(Console.ReadLine());
-
-            Console.WriteLine("\n\n");
-
-            var ranker = new Ranker(fetcher);
-            ranker.Rank();
-            ranker.PrintSortedDocs();
         }
     }
 }

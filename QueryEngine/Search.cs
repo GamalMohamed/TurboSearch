@@ -9,7 +9,7 @@ namespace TurboSearch
     public class Search
     {
         private readonly Porter2 _stemer;
-        public readonly string Path;
+        private readonly WordsContext _db = new WordsContext();
 
         public int SearchType { get; set; }
         public string[] DistinctqueryWords { get; set; }
@@ -18,11 +18,13 @@ namespace TurboSearch
         public List<string> PhraseResults { get; set; } // IDs for docs containing the phrase
         public Dictionary<string, string> WordsDictionary { get; set; }
         public Word QueryWordInfo { get; set; }
+        public string Path { get; set; }
+        public Ranker Ranker { get; set; }
 
-        public Search(WordsContext db)
+        public Search()
         {
             // Get all words from DB and store it in a dictionary
-            WordsDictionary = db.Words.ToDictionary(t => t.WordContent, t => t.WordStorings);
+            WordsDictionary = _db.Words.ToDictionary(t => t.WordContent, t => t.WordStorings);
             _stemer = new Porter2();
             PhraseResults = new List<string>();
             Path = @"D:\Misc\temp0\";
@@ -48,6 +50,11 @@ namespace TurboSearch
                 QueryWords(false);
             }
             Console.WriteLine("\n");
+
+            Ranker = new Ranker(this);
+            Ranker.Rank();
+            Ranker.PrintSortedDocs();
+            var x = Ranker.UrlTitleFinalResults;
         }
 
         public void PrintResults()

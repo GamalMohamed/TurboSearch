@@ -10,7 +10,7 @@ namespace TurboSearch
     {
         private readonly Porter2 _stemer;
         private readonly WordsContext _db = new WordsContext();
-        private static string _path = @"D:\Misc\temp0\";
+        private static string _path = @"D:\Misc\temp\";
 
         public int SearchType { get; set; }
         public string[] DistinctqueryWords { get; set; }
@@ -55,7 +55,6 @@ namespace TurboSearch
             Ranker = new Ranker(this);
             Ranker.Rank();
             Ranker.PrintSortedDocs();
-            var x = Ranker.UrlTitleFinalResults;
         }
 
         public void PrintResults()

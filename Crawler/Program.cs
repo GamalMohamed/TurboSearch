@@ -27,7 +27,7 @@ namespace TurboSearch
             MySpider = new Spider(Settings)
             {
                 Logfilepath =
-                    @"D:\3rd year-2nd term material\1- APT\3- Project\Project 2017\TurboSearch\log.txt",
+                    @"D:\temp\log.txt",
                 DownloadedHtmlFilesLoc = @"D:\temp\"
             };
 
@@ -71,7 +71,7 @@ namespace TurboSearch
         {
             lock (_filter)
             {
-                if (MySpider.CrawledLinkNumber >= 5000)
+                if (MySpider.CrawledLinkNumber >= 215)
                 {
                     Console.WriteLine("\nReached max no. of pages to crawl!Exiting..\n");
                     Environment.Exit(1);
@@ -81,9 +81,13 @@ namespace TurboSearch
                 {
                     _filter.Add(args.Url);
 
-                    Console.WriteLine(MySpider.CrawledLinkNumber++ + ". " + args.Url);
+                    Console.WriteLine(MySpider.CrawledLinkNumber + ". " + args.Url);
                     var client = new WebClient();
-                    client.DownloadFile(args.Url, MySpider.DownloadedHtmlFilesLoc + MySpider.CrawledLinkNumber + ".html");
+                    var downloadfilepath = MySpider.DownloadedHtmlFilesLoc + MySpider.CrawledLinkNumber + ".html";
+                    client.DownloadFile(args.Url, downloadfilepath);
+
+                    if (File.Exists(downloadfilepath))
+                        MySpider.CrawledLinkNumber++;
 
                     MySpider.LogFile.WriteLine(args.Url);
                     MySpider.LogFile.Flush();

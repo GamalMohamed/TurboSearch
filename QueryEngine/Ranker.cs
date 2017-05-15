@@ -94,21 +94,16 @@ namespace TurboSearch
 
         private void ManipulateDocs(string path)
         {
-            // 1. Read html docs in directory one by one
-            //var dir = new System.IO.DirectoryInfo(path);
-            //var filesCount = dir.GetFiles().Length;
-
-            MapLinkId(path); // 2. Map each link to its docID
-
+            MapLinkId(path); // Map each link to its docID
             for (int i = 1; i <= _docIdUrl.Count; i++)
             {
                 var docPath = path + i + ".html";
-                if (!File.Exists(docPath))
-                    continue;
+                //if (!File.Exists(docPath))
+                //    continue;
                 var doc = new HtmlDocument();
                 doc.Load(docPath);
 
-                //Console.WriteLine("extracting hrefs from doc " + i);
+                Console.WriteLine("extracting hrefs from doc " + i);
                 ExtractDocHrefs(doc, i.ToString());
             }
         }
@@ -188,12 +183,13 @@ namespace TurboSearch
         private string GetDocTitle(string docId)
         {
             var docPath = _fetcher.Path + docId + ".html";
-            if (!File.Exists(docPath))
-                return "Default";
+            //if (!File.Exists(docPath))
+            //    return "Default";
             var doc = new HtmlDocument();
             doc.Load(docPath);
             var title= doc.DocumentNode.Descendants("title").FirstOrDefault();
-            return title==null ? "Default":title.InnerText;
+            //return title==null ? "Default":title.InnerText;
+            return title?.InnerText;
         }
 
         public void PrintSortedDocs()

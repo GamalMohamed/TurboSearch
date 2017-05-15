@@ -12,9 +12,9 @@ namespace TurboSearch
     class Program
     {
         private static readonly Porter2 Stemer = new Porter2();
-        private const string Path = @"D:\Misc\temp0\";
-        private const int NumOfDocs = 4500;
-        private const int MaxWordsNo = 100000000;
+        private const string Path = @"D:\Misc\temp\";
+        private const int NumOfDocs = 5000;
+        private const int MaxWordsNo = 1000000;
 
         public static WordsContext Db = new WordsContext();
 
@@ -90,7 +90,6 @@ namespace TurboSearch
                                            select x.InnerText).FirstOrDefault();
                         break;
                     case "p":
-                        var sb = new StringBuilder();
                         var nodes = doc.DocumentNode.Descendants().Where(n =>
                             n.NodeType == HtmlNodeType.Text &&
                             n.ParentNode.Name != "script" &&
@@ -156,8 +155,6 @@ namespace TurboSearch
                 #region Reading input HTML doc
                 var newPath = Path + i + ".html";
                 Console.WriteLine("Parsing File: " + newPath);
-                if (!File.Exists(newPath))
-                    continue;
                 var doc = new HtmlDocument();
                 doc.Load(newPath);
                 #endregion

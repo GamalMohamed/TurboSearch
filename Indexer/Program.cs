@@ -106,37 +106,40 @@ namespace TurboSearch
                         break;
                 }
 
-                var parts = totalWordsofTag.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
-                string stemmedTotalWordsofTag = "";
-                foreach (string word in parts)
+                if (totalWordsofTag != null)
                 {
-                    string sword = Stemer.stem(word.ToLower());
-                    if (Regex.IsMatch(sword, @"^[a-z]+$") && CheckStoppingList(sword, stoppingList)
-                        && sword != " " && sword != "" && sword != "\n" && sword != "\t")
+                    var parts = totalWordsofTag.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+                    string stemmedTotalWordsofTag = "";
+                    foreach (string word in parts)
                     {
-                        stemmedTotalWordsofTag = stemmedTotalWordsofTag + sword + ' ';
+                        string sword = Stemer.stem(word.ToLower());
+                        if (Regex.IsMatch(sword, @"^[a-z]+$") && CheckStoppingList(sword, stoppingList)
+                            && sword != " " && sword != "" && sword != "\n" && sword != "\t")
+                        {
+                            stemmedTotalWordsofTag = stemmedTotalWordsofTag + sword + ' ';
+                        }
                     }
-                }
-                var stemmedTotalWordsofTagArr = stemmedTotalWordsofTag.Split(' ');
-                var z = new string[totalWordsofDoc.Length + stemmedTotalWordsofTagArr.Length];
-                totalWordsofDoc.CopyTo(z, 0);
-                stemmedTotalWordsofTagArr.CopyTo(z, totalWordsofDoc.Length);
-                totalWordsofDoc = z;
-                foreach (string word in stemmedTotalWordsofTagArr)
-                {
-                    if (!wordMap.ContainsKey(word))
+                    var stemmedTotalWordsofTagArr = stemmedTotalWordsofTag.Split(' ');
+                    var z = new string[totalWordsofDoc.Length + stemmedTotalWordsofTagArr.Length];
+                    totalWordsofDoc.CopyTo(z, 0);
+                    stemmedTotalWordsofTagArr.CopyTo(z, totalWordsofDoc.Length);
+                    totalWordsofDoc = z;
+                    foreach (string word in stemmedTotalWordsofTagArr)
                     {
-                        wordMap[word] = appendID_tag(i, t, "");
-                        wordOccurs[word] = 1;
-                        wordMapArr[countArr++] = word;
+                        if (!wordMap.ContainsKey(word))
+                        {
+                            wordMap[word] = appendID_tag(i, t, "");
+                            wordOccurs[word] = 1;
+                            wordMapArr[countArr++] = word;
+                        }
+                        else if (!CheckIDexists(i, wordMap[word]))
+                        {
+                            wordMap[word] = appendID_tag(i, t, wordMap[word]);
+                            wordOccurs[word] = 1;
+                        }
+                        else
+                            wordOccurs[word]++;
                     }
-                    else if (!CheckIDexists(i, wordMap[word]))
-                    {
-                        wordMap[word] = appendID_tag(i, t, wordMap[word]);
-                        wordOccurs[word] = 1;
-                    }
-                    else
-                        wordOccurs[word]++;
                 }
             }
         }
@@ -180,11 +183,11 @@ namespace TurboSearch
             {
                 words[k].SetAttributes(k, wordMapArr[k], wordMap[wordMapArr[k]]);
                 Db.Words.Add(words[k]);
-                Db.SaveChanges();
                 Console.WriteLine(k);
             }
+            Db.SaveChanges();
             #endregion
-            
+
         }
     }
 }
